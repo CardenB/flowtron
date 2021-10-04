@@ -63,9 +63,10 @@ def prepare_dataloaders(data_config, n_gpus, batch_size):
     trainset = Data(data_config['training_files'],
                     **dict((k, v) for k, v in data_config.items()
                     if k not in ignore_keys))
-    valset = Data(data_config['validation_files'],
-                  **dict((k, v) for k, v in data_config.items()
-                  if k not in ignore_keys), speaker_ids=trainset.speaker_ids)
+    valset = None
+    # valset = Data(data_config['validation_files'],
+    #               **dict((k, v) for k, v in data_config.items()
+    #               if k not in ignore_keys), speaker_ids=trainset.speaker_ids)
 
     collate_fn = DataCollate(
         n_frames_per_step=1, use_attn_prior=trainset.use_attn_prior)
@@ -356,18 +357,18 @@ def train(n_gpus, rank, output_directory, epochs, optim_algo, learning_rate,
                     iteration)
 
             if iteration % iters_per_checkpoint == 0:
-                (val_loss, val_loss_nll, val_loss_gate, val_loss_ctc,
-                    attns, gate_pred, gate_target) = \
-                    compute_validation_loss(model, criterion, valset,
-                                            batch_size, n_gpus, apply_ctc)
+                # (val_loss, val_loss_nll, val_loss_gate, val_loss_ctc,
+                #     attns, gate_pred, gate_target) = \
+                #     compute_validation_loss(model, criterion, valset,
+                #                             batch_size, n_gpus, apply_ctc)
                 if rank == 0:
-                    print("Validation loss {}: {:9f}  ".format(
-                        iteration, val_loss))
-                    if with_tensorboard:
-                        logger.log_validation(
-                            val_loss, val_loss_nll,
-                            val_loss_gate, val_loss_ctc,
-                            attns, gate_pred, gate_target, iteration)
+                    # print("Validation loss {}: {:9f}  ".format(
+                    #     iteration, val_loss))
+                    # if with_tensorboard:
+                    #     logger.log_validation(
+                    #         val_loss, val_loss_nll,
+                    #         val_loss_gate, val_loss_ctc,
+                    #         attns, gate_pred, gate_target, iteration)
 
                     checkpoint_path = "{}/model_{}".format(
                         output_directory, iteration)
