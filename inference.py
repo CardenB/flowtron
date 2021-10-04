@@ -38,7 +38,7 @@ from scipy.io.wavfile import write
 
 
 def infer(flowtron_path, waveglow_path, output_dir, text, speaker_id, n_frames,
-          sigma, gate_threshold, seed):
+          sigma, gate_threshold, seed, model_config, data_config):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
 
@@ -51,8 +51,10 @@ def infer(flowtron_path, waveglow_path, output_dir, text, speaker_id, n_frames,
 
     # load flowtron
     model = Flowtron(**model_config).cuda()
-    state_dict = torch.load(flowtron_path, map_location='cpu')['state_dict']
-    model.load_state_dict(state_dict)
+    # import ipdb; ipdb.set_trace()
+    checkpointed_model = torch.load(flowtron_path, map_location='cpu')['model']
+    # state_dict = torch.load(flowtron_path, map_location='cpu')['optimizer']
+    model.load_state_dict(checkpointed_model.state_dict())
     model.eval()
     print("Loaded checkpoint '{}')" .format(flowtron_path))
 
@@ -73,8 +75,10 @@ def infer(flowtron_path, waveglow_path, output_dir, text, speaker_id, n_frames,
     for k in range(len(attentions)):
         attention = torch.cat(attentions[k]).cpu().numpy()
         fig, axes = plt.subplots(1, 2, figsize=(16, 4))
-        axes[0].imshow(mels[0].cpu().numpy(), origin='bottom', aspect='auto')
-        axes[1].imshow(attention[:, 0].transpose(), origin='bottom', aspect='auto')
+        # axes[0].imshow(mels[0].cpu().numpy(), origin='bottom', aspect='auto')
+        axes[0].imshow(mels[0].cpu().numpy(), origin='lower', aspect='auto')
+        # axes[1].imshow(attention[:, 0].transpose(), origin='bottom', aspect='auto')
+        axes[1].imshow(attention[:, 0].transpose(), origin='lower', aspect='auto')
         fig.savefig(os.path.join(output_dir, 'sid{}_sigma{}_attnlayer{}.png'.format(speaker_id, sigma, k)))
         plt.close("all")
 
@@ -129,4 +133,4 @@ if __name__ == "__main__":
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = False
     infer(args.flowtron_path, args.waveglow_path, args.output_dir, args.text,
-          args.id, args.n_frames, args.sigma, args.gate, args.seed)
+          args.id, args.n_frames, args.sigma, args.gate, args.seed, model_config, data_config)
